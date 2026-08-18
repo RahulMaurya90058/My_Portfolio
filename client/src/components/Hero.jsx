@@ -9,7 +9,7 @@ import {
   FaLinkedinIn,
 } from "react-icons/fa";
 
-const API_URL = "http://localhost:5000";
+const API_URL = import.meta.env.VITE_API_URL;
 
 function Hero() {
   const [profile, setProfile] =
