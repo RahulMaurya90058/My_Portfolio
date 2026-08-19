@@ -442,19 +442,16 @@ function AdminDashboard() {
 
             {/* Profile Photo */}
 
-            <div className="h-14 w-14 shrink-0 overflow-hidden rounded-full border-2 border-cyan-400/40 bg-cyan-400">
-
-              <img
-                src={profileImage}
-                alt={adminName}
-                className="h-full w-full object-cover"
-                onError={(event) => {
-                  event.currentTarget.style.display =
-                    "none";
-                }}
-              />
-
-            </div>
+           <div className="h-14 w-14 shrink-0 overflow-hidden rounded-full border-2 border-cyan-400/40 bg-transparent">
+  <img
+    src={profileImage}
+    alt={adminName}
+    className="h-full w-full object-contain"
+    onError={(event) => {
+      event.currentTarget.style.display = "none";
+    }}
+  />
+</div>
 
             {/* Name + Admin ID */}
 
