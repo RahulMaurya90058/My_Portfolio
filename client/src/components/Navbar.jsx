@@ -75,7 +75,7 @@ function Navbar() {
           {/* LinkedIn */}
 
           <a
-            href="www.linkedin.com/in/rahul-maurya-16b957312"
+            href="https://www.linkedin.com/in/rahul-maurya-16b957312"
             target="_blank"
             rel="noreferrer"
             className="rounded-full p-2 text-slate-300 transition hover:bg-white/10 hover:text-cyan-400"

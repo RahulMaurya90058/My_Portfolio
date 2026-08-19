@@ -96,7 +96,7 @@ function Footer() {
               </a>
 
               <a
-                href="www.linkedin.com/in/rahul-maurya-16b957312"
+                href="https://www.linkedin.com/in/rahul-maurya-16b957312"
                 target="_blank"
                 rel="noreferrer"
                 aria-label="LinkedIn"
