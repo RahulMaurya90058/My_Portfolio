@@ -34,6 +34,11 @@ function App() {
         ========================== */}
 
         <Route
+  path="/admin"
+  element={<AdminLogin />}
+/>
+
+        <Route
           path="/admin/login"
           element={<AdminLogin />}
         />
