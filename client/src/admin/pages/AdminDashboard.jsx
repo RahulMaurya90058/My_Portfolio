@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { useNavigate } from "react-router-dom";
-
+import { Link, useNavigate } from "react-router-dom";
 import {
   FaTachometerAlt,
   FaUser,
@@ -9,125 +8,148 @@ import {
   FaProjectDiagram,
   FaBriefcase,
   FaGraduationCap,
-  FaAward,
+  FaCertificate,
+  FaTrophy,
   FaFileAlt,
   FaEnvelope,
   FaSignOutAlt,
+  FaExternalLinkAlt,
+  FaPlus,
+  FaArrowRight,
   FaBars,
   FaTimes,
+  FaSyncAlt,
 } from "react-icons/fa";
 
 import API from "../../api/api";
 
-// ==========================================
-// Sidebar Menu
-// ==========================================
-
-const menuItems = [
-  {
-    name: "Dashboard",
-    icon: FaTachometerAlt,
-    path: "/admin/dashboard",
-  },
-  {
-    name: "Profile",
-    icon: FaUser,
-    path: "/admin/profile",
-  },
-  {
-    name: "Skills",
-    icon: FaCode,
-    path: "/admin/skills",
-  },
-  {
-    name: "Projects",
-    icon: FaProjectDiagram,
-    path: "/admin/projects",
-  },
-  {
-    name: "Experience",
-    icon: FaBriefcase,
-    path: "/admin/experience",
-  },
-  {
-    name: "Education",
-    icon: FaGraduationCap,
-    path: "/admin/education",
-  },
-  {
-    name: "Achievements",
-    icon: FaAward,
-    path: "/admin/achievements",
-  },
-  {
-    name: "Resume",
-    icon: FaFileAlt,
-    path: "/admin/resume",
-  },
-  {
-    name: "Messages",
-    icon: FaEnvelope,
-    path: "/admin/messages",
-  },
-];
-
-// ==========================================
-// Admin Dashboard
-// ==========================================
-
 function AdminDashboard() {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-
-  // Projects count
-  const [projectCount, setProjectCount] = useState(0);
-
   const navigate = useNavigate();
 
-  // ==========================================
-  // Admin User
-  // ==========================================
+  const [adminUser, setAdminUser] = useState(null);
+  const [mobileMenu, setMobileMenu] = useState(false);
 
-  const adminUser = JSON.parse(
-    localStorage.getItem("adminUser") || "{}"
-  );
+  const [counts, setCounts] = useState({
+    projects: 0,
+    skills: 0,
+    achievements: 0,
+    messages: 0,
+  });
+
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   // ==========================================
-  // Current Path
-  // ==========================================
-
-  const currentPath = window.location.pathname;
-
-  // ==========================================
-  // Fetch Project Count
+  // Get Logged In Admin
   // ==========================================
 
   useEffect(() => {
-    const fetchProjectCount = async () => {
-      try {
-        const res = await API.get("/projects");
+    try {
+      const storedUser = localStorage.getItem("adminUser");
 
-        setProjectCount(
-          res.data.projects?.length || 0
-        );
-      } catch (error) {
-        console.error(
-          "Failed to fetch project count:",
-          error
-        );
+      if (storedUser) {
+        setAdminUser(JSON.parse(storedUser));
       }
-    };
-
-    fetchProjectCount();
+    } catch (error) {
+      console.error("Failed to load admin user:", error);
+    }
   }, []);
 
   // ==========================================
-  // Navigation
+  // Extract Array From API Response
   // ==========================================
 
-  const handleNavigation = (path) => {
-    setSidebarOpen(false);
-    navigate(path);
+  const extractArray = (response) => {
+    if (Array.isArray(response)) {
+      return response;
+    }
+
+    if (Array.isArray(response?.data)) {
+      return response.data;
+    }
+
+    if (Array.isArray(response?.items)) {
+      return response.items;
+    }
+
+    if (Array.isArray(response?.results)) {
+      return response.results;
+    }
+
+    return [];
   };
+
+  // ==========================================
+  // Fetch Dashboard Counts
+  // ==========================================
+
+  const fetchDashboardCounts = async (isRefresh = false) => {
+    try {
+      if (isRefresh) {
+        setRefreshing(true);
+      } else {
+        setLoading(true);
+      }
+
+      const results = await Promise.allSettled([
+        API.get("/api/projects"),
+        API.get("/api/skills"),
+        API.get("/api/achievements"),
+        API.get("/api/contact"),
+      ]);
+
+      const [projectsResult, skillsResult, achievementsResult, messagesResult] =
+        results;
+
+      setCounts({
+        projects:
+          projectsResult.status === "fulfilled"
+            ? extractArray(projectsResult.value).length
+            : 0,
+
+        skills:
+          skillsResult.status === "fulfilled"
+            ? extractArray(skillsResult.value).length
+            : 0,
+
+        achievements:
+          achievementsResult.status === "fulfilled"
+            ? extractArray(achievementsResult.value).length
+            : 0,
+
+        messages:
+          messagesResult.status === "fulfilled"
+            ? extractArray(messagesResult.value).length
+            : 0,
+      });
+
+      // Show individual errors in console
+      results.forEach((result, index) => {
+        if (result.status === "rejected") {
+          const names = [
+            "Projects",
+            "Skills",
+            "Achievements",
+            "Messages",
+          ];
+
+          console.error(
+            `Failed to load ${names[index]}:`,
+            result.reason
+          );
+        }
+      });
+    } catch (error) {
+      console.error("Failed to load dashboard:", error);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchDashboardCounts();
+  }, []);
 
   // ==========================================
   // Logout
@@ -137,509 +159,560 @@ function AdminDashboard() {
     localStorage.removeItem("adminToken");
     localStorage.removeItem("adminUser");
 
-    navigate("/admin/login");
+    navigate("/admin/login", {
+      replace: true,
+    });
   };
 
+  // ==========================================
+  // Sidebar Items
+  // ==========================================
+
+  const menuItems = [
+    {
+      name: "Dashboard",
+      path: "/admin/dashboard",
+      icon: <FaTachometerAlt />,
+    },
+    {
+      name: "Profile",
+      path: "/admin/profile",
+      icon: <FaUser />,
+    },
+    {
+      name: "Skills",
+      path: "/admin/skills",
+      icon: <FaCode />,
+    },
+    {
+      name: "Projects",
+      path: "/admin/projects",
+      icon: <FaProjectDiagram />,
+    },
+    {
+      name: "Experience",
+      path: "/admin/experience",
+      icon: <FaBriefcase />,
+    },
+    {
+      name: "Education",
+      path: "/admin/education",
+      icon: <FaGraduationCap />,
+    },
+    {
+      name: "Certifications",
+      path: "/admin/certifications",
+      icon: <FaCertificate />,
+    },
+    {
+      name: "Achievements",
+      path: "/admin/achievements",
+      icon: <FaTrophy />,
+    },
+    {
+      name: "Resume",
+      path: "/admin/resume",
+      icon: <FaFileAlt />,
+    },
+    {
+      name: "Messages",
+      path: "/admin/contact",
+      icon: <FaEnvelope />,
+    },
+  ];
+
+  // ==========================================
+  // Statistics Cards
+  // ==========================================
+
+  const stats = [
+    {
+      title: "Projects",
+      value: counts.projects,
+      icon: <FaProjectDiagram />,
+      path: "/admin/projects",
+      description: "Portfolio projects",
+    },
+    {
+      title: "Skills",
+      value: counts.skills,
+      icon: <FaCode />,
+      path: "/admin/skills",
+      description: "Technical skills",
+    },
+    {
+      title: "Achievements",
+      value: counts.achievements,
+      icon: <FaTrophy />,
+      path: "/admin/achievements",
+      description: "Career achievements",
+    },
+    {
+      title: "Messages",
+      value: counts.messages,
+      icon: <FaEnvelope />,
+      path: "/admin/contact",
+      description: "Contact messages",
+    },
+  ];
+
+  // ==========================================
+  // Quick Actions
+  // ==========================================
+
+  const quickActions = [
+    {
+      title: "Update Profile",
+      description: "Manage your personal information.",
+      path: "/admin/profile",
+      icon: <FaUser />,
+    },
+    {
+      title: "Add Project",
+      description: "Add a new project to your portfolio.",
+      path: "/admin/projects",
+      icon: <FaProjectDiagram />,
+    },
+    {
+      title: "Add Skill",
+      description: "Add or manage your technical skills.",
+      path: "/admin/skills",
+      icon: <FaCode />,
+    },
+  ];
+
   return (
-    <div className="min-h-screen bg-slate-950 text-white">
+    <div className="min-h-screen bg-[#020617] text-white">
+      {/* ==========================================
+          MOBILE HEADER
+      ========================================== */}
 
-      {/* ======================================
-          Mobile Header
-      ======================================= */}
-
-      <header className="fixed left-0 right-0 top-0 z-40 flex h-16 items-center justify-between border-b border-white/10 bg-slate-950/95 px-5 backdrop-blur-lg lg:hidden">
-
-        <button
-          type="button"
-          onClick={() => setSidebarOpen(true)}
-          className="text-slate-300 transition hover:text-cyan-400"
-          aria-label="Open menu"
+      <div className="sticky top-0 z-50 flex items-center justify-between border-b border-white/10 bg-[#0f172a]/95 px-5 py-4 backdrop-blur-xl lg:hidden">
+        <Link
+          to="/admin/dashboard"
+          className="text-2xl font-bold tracking-tight"
         >
-          <FaBars size={20} />
-        </button>
+          Rahul<span className="text-cyan-400">.</span>
+        </Link>
 
-        <h1 className="text-lg font-bold">
-          Rahul
-          <span className="text-cyan-400">
-            .
-          </span>
-        </h1>
-
-        <div className="h-8 w-8 rounded-full bg-cyan-400/20" />
-
-      </header>
-
-      {/* ======================================
-          Mobile Overlay
-      ======================================= */}
-
-      {sidebarOpen && (
         <button
-          type="button"
-          aria-label="Close sidebar"
-          onClick={() => setSidebarOpen(false)}
-          className="fixed inset-0 z-40 bg-black/60 lg:hidden"
-        />
-      )}
+          onClick={() => setMobileMenu(!mobileMenu)}
+          className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-slate-300 transition hover:border-cyan-400/30 hover:text-cyan-400"
+        >
+          {mobileMenu ? <FaTimes /> : <FaBars />}
+        </button>
+      </div>
 
-      {/* ======================================
-          Sidebar
-      ======================================= */}
+      {/* ==========================================
+          SIDEBAR
+      ========================================== */}
 
       <aside
-        className={`fixed bottom-0 left-0 top-0 z-50 flex w-72 flex-col border-r border-white/10 bg-slate-900 transition-transform duration-300 lg:translate-x-0 ${
-          sidebarOpen
-            ? "translate-x-0"
-            : "-translate-x-full"
-        }`}
+        className={`
+          fixed left-0 top-0 z-40 flex h-screen w-72 flex-col
+          border-r border-white/10 bg-[#0f172a]
+          transition-transform duration-300
+          lg:translate-x-0
+          ${
+            mobileMenu
+              ? "translate-x-0"
+              : "-translate-x-full"
+          }
+        `}
       >
+        {/* Logo */}
 
-        {/* Sidebar Header */}
-
-        <div className="flex h-20 items-center justify-between border-b border-white/10 px-6">
-
-          <div>
-
-            <h1 className="text-2xl font-bold text-white">
-              Rahul
-              <span className="text-cyan-400">
-                .
-              </span>
-            </h1>
-
-            <p className="mt-1 text-xs text-slate-500">
-              Admin Panel
-            </p>
-
-          </div>
-
-          <button
-            type="button"
-            onClick={() =>
-              setSidebarOpen(false)
-            }
-            className="text-slate-500 transition hover:text-white lg:hidden"
-            aria-label="Close menu"
+        <div className="border-b border-white/10 px-7 py-6">
+          <Link
+            to="/admin/dashboard"
+            className="text-3xl font-bold tracking-tight"
           >
-            <FaTimes size={19} />
-          </button>
+            Rahul<span className="text-cyan-400">.</span>
+          </Link>
 
+          <p className="mt-1 text-sm text-slate-500">
+            Admin Panel
+          </p>
         </div>
 
-        {/* ======================================
-            Admin Info
-        ======================================= */}
+        {/* Admin Profile */}
 
-        <div className="border-b border-white/10 p-5">
-
-          <div className="flex items-center gap-3">
-
-            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-cyan-400 font-bold text-slate-950">
-              RM
+        <div className="border-b border-white/10 px-6 py-6">
+          <div className="flex items-center gap-4">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-cyan-400 text-lg font-bold text-slate-950">
+              {adminUser?.name
+                ? adminUser.name
+                    .split(" ")
+                    .map((word) => word[0])
+                    .join("")
+                    .slice(0, 2)
+                    .toUpperCase()
+                : "RM"}
             </div>
 
             <div className="min-w-0">
+              <h3 className="truncate font-semibold text-white">
+                {adminUser?.name || "Rahul Maurya"}
+              </h3>
 
-              <p className="truncate text-sm font-semibold text-white">
-                {adminUser.name ||
-                  "Rahul Maurya"}
+              <p className="truncate text-sm text-slate-500">
+                {adminUser?.email || "admin@portfolio.com"}
               </p>
-
-              <p className="truncate text-xs text-slate-500">
-                {adminUser.email ||
-                  "Admin"}
-              </p>
-
             </div>
-
           </div>
-
         </div>
 
-        {/* ======================================
-            Navigation
-        ======================================= */}
+        {/* Navigation */}
 
-        <nav className="flex-1 overflow-y-auto p-4">
-
-          <p className="mb-3 px-3 text-xs font-semibold uppercase tracking-wider text-slate-600">
+        <nav className="flex-1 overflow-y-auto px-4 py-6">
+          <p className="mb-4 px-3 text-xs font-semibold uppercase tracking-widest text-slate-600">
             Management
           </p>
 
           <div className="space-y-1">
-
-            {menuItems.map((item) => {
-
-              const Icon = item.icon;
-
-              const isActive =
-                currentPath === item.path;
-
-              return (
-                <button
-                  key={item.name}
-                  type="button"
-                  onClick={() =>
-                    handleNavigation(
-                      item.path
-                    )
-                  }
-                  className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition ${
-                    isActive
-                      ? "bg-cyan-400/10 text-cyan-400"
+            {menuItems.map((item) => (
+              <Link
+                key={item.path}
+                to={item.path}
+                onClick={() => setMobileMenu(false)}
+                className={`
+                  group flex items-center gap-4 rounded-xl px-4 py-3
+                  text-sm font-medium transition-all
+                  ${
+                    item.path === "/admin/dashboard"
+                      ? "bg-cyan-400/10 text-cyan-400 shadow-lg shadow-cyan-400/5"
                       : "text-slate-400 hover:bg-white/5 hover:text-white"
-                  }`}
+                  }
+                `}
+              >
+                <span
+                  className={`
+                    text-base transition
+                    ${
+                      item.path === "/admin/dashboard"
+                        ? "text-cyan-400"
+                        : "text-slate-500 group-hover:text-cyan-400"
+                    }
+                  `}
                 >
-                  <Icon size={16} />
+                  {item.icon}
+                </span>
 
-                  {item.name}
-
-                </button>
-              );
-
-            })}
-
+                <span>{item.name}</span>
+              </Link>
+            ))}
           </div>
-
         </nav>
 
-        {/* ======================================
-            Logout
-        ======================================= */}
+        {/* Logout */}
 
         <div className="border-t border-white/10 p-4">
-
           <button
-            type="button"
             onClick={handleLogout}
-            className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-red-400 transition hover:bg-red-400/10"
+            className="flex w-full items-center gap-4 rounded-xl px-4 py-3 text-sm font-semibold text-red-400 transition hover:bg-red-400/10"
           >
-            <FaSignOutAlt size={16} />
-
+            <FaSignOutAlt />
             Logout
-
           </button>
-
         </div>
-
       </aside>
 
-      {/* ======================================
-          Main Content
-      ======================================= */}
+      {/* ==========================================
+          MOBILE OVERLAY
+      ========================================== */}
+
+      {mobileMenu && (
+        <div
+          onClick={() => setMobileMenu(false)}
+          className="fixed inset-0 z-30 bg-black/60 backdrop-blur-sm lg:hidden"
+        />
+      )}
+
+      {/* ==========================================
+          MAIN CONTENT
+      ========================================== */}
 
       <main className="min-h-screen lg:ml-72">
+        {/* ==========================================
+            TOP BAR
+        ========================================== */}
 
-        {/* ======================================
-            Desktop Top Bar
-        ======================================= */}
-
-        <div className="hidden h-20 items-center justify-between border-b border-white/10 px-8 lg:flex">
-
+        <header className="hidden h-24 items-center justify-between border-b border-white/10 bg-[#020617] px-10 lg:flex">
           <div>
-
-            <h2 className="text-xl font-bold text-white">
+            <h1 className="text-2xl font-bold">
               Dashboard
-            </h2>
+            </h1>
 
             <p className="mt-1 text-sm text-slate-500">
               Manage your portfolio from one place.
             </p>
-
           </div>
 
-          <a
-            href="/"
-            target="_blank"
-            rel="noreferrer"
-            className="rounded-xl border border-white/10 px-4 py-2 text-sm font-medium text-slate-300 transition hover:border-cyan-400 hover:text-cyan-400"
-          >
-            View Portfolio
-          </a>
-
-        </div>
-
-        {/* Mobile Spacing */}
-
-        <div className="h-16 lg:hidden" />
-
-        <div className="p-5 sm:p-8">
-
-          {/* ======================================
-              Welcome
-          ======================================= */}
-
-          <motion.div
-            initial={{
-              opacity: 0,
-              y: 20,
-            }}
-            animate={{
-              opacity: 1,
-              y: 0,
-            }}
-            transition={{
-              duration: 0.5,
-            }}
-            className="rounded-3xl border border-white/10 bg-slate-900 p-6 sm:p-8"
-          >
-
-            <p className="text-sm font-medium text-cyan-400">
-              Welcome back 👋
-            </p>
-
-            <h1 className="mt-2 text-3xl font-bold text-white">
-              {adminUser.name ||
-                "Rahul Maurya"}
-            </h1>
-
-            <p className="mt-3 max-w-2xl leading-7 text-slate-400">
-              Manage your portfolio content,
-              projects, skills, education,
-              achievements and messages from
-              this dashboard.
-            </p>
-
-          </motion.div>
-
-          {/* ======================================
-              Statistics
-          ======================================= */}
-
-          <div className="mt-8 grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
-
-            {/* Projects */}
-
+          <div className="flex items-center gap-3">
             <button
-              type="button"
-              onClick={() =>
-                handleNavigation(
-                  "/admin/projects"
-                )
-              }
-              className="rounded-2xl border border-white/10 bg-slate-900 p-6 text-left transition hover:border-cyan-400/30"
+              onClick={() => fetchDashboardCounts(true)}
+              disabled={refreshing}
+              className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-medium text-slate-300 transition hover:border-cyan-400/30 hover:text-cyan-400 disabled:opacity-50"
             >
+              <FaSyncAlt
+                className={
+                  refreshing ? "animate-spin" : ""
+                }
+              />
 
-              <div className="flex items-center justify-between">
-
-                <div>
-
-                  <p className="text-sm text-slate-500">
-                    Projects
-                  </p>
-
-                  {/* Dynamic Project Count */}
-
-                  <p className="mt-2 text-3xl font-bold text-white">
-                    {projectCount}
-                  </p>
-
-                </div>
-
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-cyan-400/10 text-cyan-400">
-                  <FaProjectDiagram />
-                </div>
-
-              </div>
-
+              Refresh
             </button>
 
-            {/* Skills */}
-
-            <button
-              type="button"
-              onClick={() =>
-                handleNavigation(
-                  "/admin/skills"
-                )
-              }
-              className="rounded-2xl border border-white/10 bg-slate-900 p-6 text-left transition hover:border-cyan-400/30"
+            <Link
+              to="/"
+              target="_blank"
+              className="flex items-center gap-2 rounded-xl border border-white/10 px-5 py-2.5 text-sm font-semibold text-slate-300 transition hover:border-cyan-400/40 hover:bg-white/5 hover:text-white"
             >
-
-              <div className="flex items-center justify-between">
-
-                <div>
-
-                  <p className="text-sm text-slate-500">
-                    Skills
-                  </p>
-
-                  <p className="mt-2 text-3xl font-bold text-white">
-                    0
-                  </p>
-
-                </div>
-
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-cyan-400/10 text-cyan-400">
-                  <FaCode />
-                </div>
-
-              </div>
-
-            </button>
-
-            {/* Achievements */}
-
-            <button
-              type="button"
-              onClick={() =>
-                handleNavigation(
-                  "/admin/achievements"
-                )
-              }
-              className="rounded-2xl border border-white/10 bg-slate-900 p-6 text-left transition hover:border-cyan-400/30"
-            >
-
-              <div className="flex items-center justify-between">
-
-                <div>
-
-                  <p className="text-sm text-slate-500">
-                    Achievements
-                  </p>
-
-                  <p className="mt-2 text-3xl font-bold text-white">
-                    0
-                  </p>
-
-                </div>
-
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-cyan-400/10 text-cyan-400">
-                  <FaAward />
-                </div>
-
-              </div>
-
-            </button>
-
-            {/* Messages */}
-
-            <button
-              type="button"
-              onClick={() =>
-                handleNavigation(
-                  "/admin/messages"
-                )
-              }
-              className="rounded-2xl border border-white/10 bg-slate-900 p-6 text-left transition hover:border-cyan-400/30"
-            >
-
-              <div className="flex items-center justify-between">
-
-                <div>
-
-                  <p className="text-sm text-slate-500">
-                    Messages
-                  </p>
-
-                  <p className="mt-2 text-3xl font-bold text-white">
-                    0
-                  </p>
-
-                </div>
-
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-cyan-400/10 text-cyan-400">
-                  <FaEnvelope />
-                </div>
-
-              </div>
-
-            </button>
-
+              View Portfolio
+              <FaExternalLinkAlt size={12} />
+            </Link>
           </div>
+        </header>
 
-          {/* ======================================
-              Quick Actions
-          ======================================= */}
+        <div className="px-5 py-8 sm:px-8 lg:px-10 lg:py-10">
+          {/* ==========================================
+              WELCOME CARD
+          ========================================== */}
 
-          <div className="mt-8">
+          <motion.section
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-[#111827] via-[#0f172a] to-[#07111f] p-7 shadow-2xl sm:p-10"
+          >
+            {/* Glow */}
 
-            <h3 className="text-xl font-bold text-white">
-              Quick Actions
-            </h3>
+            <div className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-cyan-400/10 blur-3xl" />
 
-            <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="relative z-10 max-w-3xl">
+              <p className="mb-3 text-sm font-semibold text-cyan-400">
+                Welcome back 👋
+              </p>
 
-              {/* Update Profile */}
+              <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
+                {adminUser?.name || "Rahul Maurya"}
+              </h2>
 
-              <button
-                type="button"
-                onClick={() =>
-                  handleNavigation(
-                    "/admin/profile"
-                  )
-                }
-                className="rounded-2xl border border-white/10 bg-slate-900 p-5 text-left transition hover:border-cyan-400/30 hover:bg-slate-900/80"
-              >
+              <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-400 sm:text-base">
+                Manage your portfolio content, projects,
+                skills, education, achievements and messages
+                from this dashboard.
+              </p>
 
-                <FaUser className="text-cyan-400" />
+              <div className="mt-7 flex flex-wrap gap-3">
+                <Link
+                  to="/admin/projects"
+                  className="inline-flex items-center gap-2 rounded-xl bg-cyan-400 px-5 py-3 text-sm font-bold text-slate-950 transition hover:bg-cyan-300"
+                >
+                  Manage Projects
+                  <FaArrowRight size={13} />
+                </Link>
 
-                <h4 className="mt-4 font-semibold text-white">
-                  Update Profile
-                </h4>
+                <Link
+                  to="/"
+                  target="_blank"
+                  className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-5 py-3 text-sm font-semibold text-slate-300 transition hover:bg-white/10 hover:text-white"
+                >
+                  View Website
+                  <FaExternalLinkAlt size={12} />
+                </Link>
+              </div>
+            </div>
+          </motion.section>
 
-                <p className="mt-1 text-sm text-slate-500">
-                  Manage your personal information.
-                </p>
+          {/* ==========================================
+              STATISTICS
+          ========================================== */}
 
-              </button>
-
-              {/* Add Project */}
-
-              <button
-                type="button"
-                onClick={() =>
-                  handleNavigation(
-                    "/admin/projects"
-                  )
-                }
-                className="rounded-2xl border border-white/10 bg-slate-900 p-5 text-left transition hover:border-cyan-400/30 hover:bg-slate-900/80"
-              >
-
-                <FaProjectDiagram className="text-cyan-400" />
-
-                <h4 className="mt-4 font-semibold text-white">
-                  Add Project
-                </h4>
-
-                <p className="mt-1 text-sm text-slate-500">
-                  Add a new project to your portfolio.
-                </p>
-
-              </button>
-
-              {/* Add Skill */}
-
-              <button
-                type="button"
-                onClick={() =>
-                  handleNavigation(
-                    "/admin/skills"
-                  )
-                }
-                className="rounded-2xl border border-white/10 bg-slate-900 p-5 text-left transition hover:border-cyan-400/30 hover:bg-slate-900/80"
-              >
-
-                <FaCode className="text-cyan-400" />
-
-                <h4 className="mt-4 font-semibold text-white">
-                  Add Skill
-                </h4>
+          <section className="mt-8">
+            <div className="mb-5 flex items-end justify-between">
+              <div>
+                <h2 className="text-xl font-bold">
+                  Overview
+                </h2>
 
                 <p className="mt-1 text-sm text-slate-500">
-                  Add or manage your technical skills.
+                  Your portfolio statistics
                 </p>
+              </div>
 
-              </button>
-
+              {loading && (
+                <span className="text-xs text-slate-600">
+                  Loading...
+                </span>
+              )}
             </div>
 
-          </div>
+            <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
+              {stats.map((stat, index) => (
+                <motion.div
+                  key={stat.title}
+                  initial={{
+                    opacity: 0,
+                    y: 20,
+                  }}
+                  animate={{
+                    opacity: 1,
+                    y: 0,
+                  }}
+                  transition={{
+                    duration: 0.4,
+                    delay: index * 0.08,
+                  }}
+                >
+                  <Link
+                    to={stat.path}
+                    className="group block h-full"
+                  >
+                    <div className="h-full rounded-2xl border border-white/10 bg-[#0f172a] p-6 transition-all duration-300 hover:-translate-y-1 hover:border-cyan-400/20 hover:bg-[#111c31] hover:shadow-xl hover:shadow-cyan-400/5">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <p className="text-sm font-medium text-slate-500">
+                            {stat.title}
+                          </p>
 
+                          <p className="mt-3 text-4xl font-bold tracking-tight text-white">
+                            {loading ? (
+                              <span className="inline-block h-10 w-12 animate-pulse rounded-lg bg-white/10" />
+                            ) : (
+                              stat.value
+                            )}
+                          </p>
+
+                          <p className="mt-2 text-xs text-slate-600">
+                            {stat.description}
+                          </p>
+                        </div>
+
+                        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-cyan-400/10 text-xl text-cyan-400 transition group-hover:bg-cyan-400/15 group-hover:scale-105">
+                          {stat.icon}
+                        </div>
+                      </div>
+
+                      <div className="mt-6 flex items-center gap-2 text-xs font-semibold text-slate-500 transition group-hover:text-cyan-400">
+                        Manage
+                        <FaArrowRight
+                          size={10}
+                          className="transition group-hover:translate-x-1"
+                        />
+                      </div>
+                    </div>
+                  </Link>
+                </motion.div>
+              ))}
+            </div>
+          </section>
+
+          {/* ==========================================
+              QUICK ACTIONS
+          ========================================== */}
+
+          <section className="mt-10">
+            <div className="mb-5">
+              <h2 className="text-xl font-bold">
+                Quick Actions
+              </h2>
+
+              <p className="mt-1 text-sm text-slate-500">
+                Quickly manage your portfolio
+              </p>
+            </div>
+
+            <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+              {quickActions.map((action, index) => (
+                <motion.div
+                  key={action.title}
+                  initial={{
+                    opacity: 0,
+                    y: 20,
+                  }}
+                  animate={{
+                    opacity: 1,
+                    y: 0,
+                  }}
+                  transition={{
+                    duration: 0.4,
+                    delay: 0.2 + index * 0.08,
+                  }}
+                >
+                  <Link
+                    to={action.path}
+                    className="group flex h-full items-center gap-5 rounded-2xl border border-white/10 bg-[#0f172a] p-6 transition-all duration-300 hover:-translate-y-1 hover:border-cyan-400/20 hover:bg-[#111c31]"
+                  >
+                    <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-cyan-400/10 text-xl text-cyan-400 transition group-hover:bg-cyan-400/15">
+                      {action.icon}
+                    </div>
+
+                    <div className="min-w-0 flex-1">
+                      <h3 className="font-semibold text-white">
+                        {action.title}
+                      </h3>
+
+                      <p className="mt-1 text-sm leading-6 text-slate-500">
+                        {action.description}
+                      </p>
+                    </div>
+
+                    <FaArrowRight
+                      className="shrink-0 text-slate-600 transition group-hover:translate-x-1 group-hover:text-cyan-400"
+                      size={13}
+                    />
+                  </Link>
+                </motion.div>
+              ))}
+            </div>
+          </section>
+
+          {/* ==========================================
+              MANAGEMENT GRID
+          ========================================== */}
+
+          <section className="mt-10">
+            <div className="mb-5">
+              <h2 className="text-xl font-bold">
+                Manage Portfolio
+              </h2>
+
+              <p className="mt-1 text-sm text-slate-500">
+                Access all portfolio sections
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+              {menuItems.slice(1).map((item) => (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  className="group rounded-2xl border border-white/10 bg-[#0f172a] p-5 text-center transition-all duration-300 hover:-translate-y-1 hover:border-cyan-400/20 hover:bg-[#111c31]"
+                >
+                  <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-xl bg-white/5 text-slate-400 transition group-hover:bg-cyan-400/10 group-hover:text-cyan-400">
+                    {item.icon}
+                  </div>
+
+                  <p className="mt-3 text-sm font-semibold text-slate-300 transition group-hover:text-white">
+                    {item.name}
+                  </p>
+                </Link>
+              ))}
+            </div>
+          </section>
+
+          {/* ==========================================
+              FOOTER
+          ========================================== */}
+
+          <footer className="mt-12 border-t border-white/10 pt-6 text-center">
+            <p className="text-xs text-slate-600">
+              Admin Dashboard • Rahul Maurya Portfolio
+            </p>
+          </footer>
         </div>
-
       </main>
-
     </div>
   );
 }
