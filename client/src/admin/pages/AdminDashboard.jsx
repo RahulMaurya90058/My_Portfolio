@@ -40,7 +40,7 @@ function AdminDashboard() {
   const [refreshing, setRefreshing] = useState(false);
 
   // ==========================================
-  // Get Logged In Admin
+  // Admin User
   // ==========================================
 
   useEffect(() => {
@@ -56,57 +56,38 @@ function AdminDashboard() {
   }, []);
 
   // ==========================================
+  // Admin Details
+  // ==========================================
+
+  const adminName = adminUser?.name || "Rahul Maurya";
+
+  const adminEmail =
+    adminUser?.email || "admin@portfolio.com";
+
+  // Profile image:
+  // Backend se image aaye to use karega,
+  // otherwise public/profile.jpg use karega.
+  const profileImage =
+    adminUser?.profileImage ||
+    adminUser?.avatar ||
+    adminUser?.photo ||
+    "/profile.jpg";
+
+  // ==========================================
   // Extract Array From API Response
   // ==========================================
 
   const extractArray = (response, key) => {
-    /*
-      Axios response structure:
-
-      response.data
-
-      Backend response may be:
-
-      {
-        success: true,
-        projects: [...]
-      }
-
-      or
-
-      {
-        success: true,
-        skills: [...]
-      }
-
-      or
-
-      {
-        success: true,
-        achievements: [...]
-      }
-
-      or
-
-      {
-        success: true,
-        contacts: [...]
-      }
-    */
-
     const payload = response?.data ?? response;
 
-    // Direct array
     if (Array.isArray(payload)) {
       return payload;
     }
 
-    // Backend named array
     if (key && Array.isArray(payload?.[key])) {
       return payload[key];
     }
 
-    // Generic formats
     if (Array.isArray(payload?.data)) {
       return payload.data;
     }
@@ -148,34 +129,31 @@ function AdminDashboard() {
         messagesResult,
       ] = results;
 
-      // ==========================================
-      // Debug API Responses
-      // ==========================================
-
+      // Debug
       if (projectsResult.status === "fulfilled") {
         console.log(
-          "Projects API Response:",
+          "Projects API:",
           projectsResult.value.data
         );
       }
 
       if (skillsResult.status === "fulfilled") {
         console.log(
-          "Skills API Response:",
+          "Skills API:",
           skillsResult.value.data
         );
       }
 
       if (achievementsResult.status === "fulfilled") {
         console.log(
-          "Achievements API Response:",
+          "Achievements API:",
           achievementsResult.value.data
         );
       }
 
       if (messagesResult.status === "fulfilled") {
         console.log(
-          "Messages API Response:",
+          "Messages API:",
           messagesResult.value.data
         );
       }
@@ -218,10 +196,7 @@ function AdminDashboard() {
             : 0,
       });
 
-      // ==========================================
-      // Show Individual Errors
-      // ==========================================
-
+      // API errors
       results.forEach((result, index) => {
         if (result.status === "rejected") {
           const names = [
@@ -249,7 +224,7 @@ function AdminDashboard() {
   };
 
   // ==========================================
-  // Load Dashboard Data
+  // Load Dashboard
   // ==========================================
 
   useEffect(() => {
@@ -270,7 +245,7 @@ function AdminDashboard() {
   };
 
   // ==========================================
-  // Sidebar Items
+  // Sidebar
   // ==========================================
 
   const menuItems = [
@@ -279,55 +254,46 @@ function AdminDashboard() {
       path: "/admin/dashboard",
       icon: <FaTachometerAlt />,
     },
-
     {
       name: "Profile",
       path: "/admin/profile",
       icon: <FaUser />,
     },
-
     {
       name: "Skills",
       path: "/admin/skills",
       icon: <FaCode />,
     },
-
     {
       name: "Projects",
       path: "/admin/projects",
       icon: <FaProjectDiagram />,
     },
-
     {
       name: "Experience",
       path: "/admin/experience",
       icon: <FaBriefcase />,
     },
-
     {
       name: "Education",
       path: "/admin/education",
       icon: <FaGraduationCap />,
     },
-
     {
       name: "Certifications",
       path: "/admin/certifications",
       icon: <FaCertificate />,
     },
-
     {
       name: "Achievements",
       path: "/admin/achievements",
       icon: <FaTrophy />,
     },
-
     {
       name: "Resume",
       path: "/admin/resume",
       icon: <FaFileAlt />,
     },
-
     {
       name: "Messages",
       path: "/admin/contact",
@@ -336,7 +302,7 @@ function AdminDashboard() {
   ];
 
   // ==========================================
-  // Statistics Cards
+  // Statistics
   // ==========================================
 
   const stats = [
@@ -347,7 +313,6 @@ function AdminDashboard() {
       path: "/admin/projects",
       description: "Portfolio projects",
     },
-
     {
       title: "Skills",
       value: counts.skills,
@@ -355,7 +320,6 @@ function AdminDashboard() {
       path: "/admin/skills",
       description: "Technical skills",
     },
-
     {
       title: "Achievements",
       value: counts.achievements,
@@ -363,7 +327,6 @@ function AdminDashboard() {
       path: "/admin/achievements",
       description: "Career achievements",
     },
-
     {
       title: "Messages",
       value: counts.messages,
@@ -385,7 +348,6 @@ function AdminDashboard() {
       path: "/admin/profile",
       icon: <FaUser />,
     },
-
     {
       title: "Add Project",
       description:
@@ -393,7 +355,6 @@ function AdminDashboard() {
       path: "/admin/projects",
       icon: <FaProjectDiagram />,
     },
-
     {
       title: "Add Skill",
       description:
@@ -410,18 +371,17 @@ function AdminDashboard() {
   return (
     <div className="min-h-screen bg-[#020617] text-white">
 
-      {/* ==========================================
+      {/* ================================
           MOBILE HEADER
-      ========================================== */}
+      ================================= */}
 
       <div className="sticky top-0 z-50 flex items-center justify-between border-b border-white/10 bg-[#0f172a]/95 px-5 py-4 backdrop-blur-xl lg:hidden">
 
         <Link
           to="/admin/dashboard"
-          className="text-2xl font-bold tracking-tight"
+          className="text-2xl font-bold"
         >
-          Rahul
-          <span className="text-cyan-400">.</span>
+          Rahul<span className="text-cyan-400">.</span>
         </Link>
 
         <button
@@ -429,20 +389,22 @@ function AdminDashboard() {
           onClick={() =>
             setMobileMenu(!mobileMenu)
           }
-          className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-slate-300 transition hover:border-cyan-400/30 hover:text-cyan-400"
+          className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-slate-300"
         >
           {mobileMenu ? <FaTimes /> : <FaBars />}
         </button>
+
       </div>
 
-      {/* ==========================================
+      {/* ================================
           SIDEBAR
-      ========================================== */}
+      ================================= */}
 
       <aside
         className={`
-          fixed left-0 top-0 z-40 flex h-screen w-72 flex-col
-          border-r border-white/10 bg-[#0f172a]
+          fixed left-0 top-0 z-40 flex h-screen w-72
+          flex-col border-r border-white/10
+          bg-[#0f172a]
           transition-transform duration-300
           lg:translate-x-0
           ${
@@ -459,10 +421,9 @@ function AdminDashboard() {
 
           <Link
             to="/admin/dashboard"
-            className="text-3xl font-bold tracking-tight"
+            className="text-3xl font-bold"
           >
-            Rahul
-            <span className="text-cyan-400">.</span>
+            Rahul<span className="text-cyan-400">.</span>
           </Link>
 
           <p className="mt-1 text-sm text-slate-500">
@@ -471,35 +432,44 @@ function AdminDashboard() {
 
         </div>
 
-        {/* Admin Profile */}
+        {/* ================================
+            ADMIN PROFILE
+        ================================= */}
 
         <div className="border-b border-white/10 px-6 py-6">
 
           <div className="flex items-center gap-4">
 
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-cyan-400 text-lg font-bold text-slate-950">
+            {/* Profile Photo */}
 
-              {adminUser?.name
-                ? adminUser.name
-                    .split(" ")
-                    .map((word) => word[0])
-                    .join("")
-                    .slice(0, 2)
-                    .toUpperCase()
-                : "RM"}
+            <div className="h-14 w-14 shrink-0 overflow-hidden rounded-full border-2 border-cyan-400/40 bg-cyan-400">
+
+              <img
+                src={profileImage}
+                alt={adminName}
+                className="h-full w-full object-cover"
+                onError={(event) => {
+                  event.currentTarget.style.display =
+                    "none";
+                }}
+              />
 
             </div>
 
+            {/* Name + Admin ID */}
+
             <div className="min-w-0">
 
-              <h3 className="truncate font-semibold text-white">
-                {adminUser?.name ||
-                  "Rahul Maurya"}
+              <h3 className="truncate text-base font-semibold text-white">
+                {adminName}
               </h3>
 
-              <p className="truncate text-sm text-slate-500">
-                {adminUser?.email ||
-                  "admin@portfolio.com"}
+              <p className="mt-1 truncate text-sm text-slate-500">
+                {adminEmail}
+              </p>
+
+              <p className="mt-1 text-xs font-medium text-cyan-400">
+                Administrator
               </p>
 
             </div>
@@ -527,12 +497,14 @@ function AdminDashboard() {
                   setMobileMenu(false)
                 }
                 className={`
-                  group flex items-center gap-4 rounded-xl px-4 py-3
-                  text-sm font-medium transition-all
+                  group flex items-center gap-4
+                  rounded-xl px-4 py-3
+                  text-sm font-medium
+                  transition-all
                   ${
                     item.path ===
                     "/admin/dashboard"
-                      ? "bg-cyan-400/10 text-cyan-400 shadow-lg shadow-cyan-400/5"
+                      ? "bg-cyan-400/10 text-cyan-400"
                       : "text-slate-400 hover:bg-white/5 hover:text-white"
                   }
                 `}
@@ -540,7 +512,7 @@ function AdminDashboard() {
 
                 <span
                   className={`
-                    text-base transition
+                    text-base
                     ${
                       item.path ===
                       "/admin/dashboard"
@@ -579,9 +551,7 @@ function AdminDashboard() {
 
       </aside>
 
-      {/* ==========================================
-          MOBILE OVERLAY
-      ========================================== */}
+      {/* Mobile Overlay */}
 
       {mobileMenu && (
         <div
@@ -592,15 +562,13 @@ function AdminDashboard() {
         />
       )}
 
-      {/* ==========================================
-          MAIN CONTENT
-      ========================================== */}
+      {/* ================================
+          MAIN
+      ================================= */}
 
       <main className="min-h-screen lg:ml-72">
 
-        {/* ==========================================
-            TOP BAR
-        ========================================== */}
+        {/* Top Bar */}
 
         <header className="hidden h-24 items-center justify-between border-b border-white/10 bg-[#020617] px-10 lg:flex">
 
@@ -617,8 +585,6 @@ function AdminDashboard() {
           </div>
 
           <div className="flex items-center gap-3">
-
-            {/* Refresh */}
 
             <button
               type="button"
@@ -641,13 +607,11 @@ function AdminDashboard() {
 
             </button>
 
-            {/* View Portfolio */}
-
             <Link
               to="/"
               target="_blank"
               rel="noreferrer"
-              className="flex items-center gap-2 rounded-xl border border-white/10 px-5 py-2.5 text-sm font-semibold text-slate-300 transition hover:border-cyan-400/40 hover:bg-white/5 hover:text-white"
+              className="flex items-center gap-2 rounded-xl border border-white/10 px-5 py-2.5 text-sm font-semibold text-slate-300 transition hover:bg-white/5 hover:text-white"
             >
               View Portfolio
               <FaExternalLinkAlt size={12} />
@@ -657,15 +621,13 @@ function AdminDashboard() {
 
         </header>
 
-        {/* ==========================================
-            CONTENT
-        ========================================== */}
+        {/* Content */}
 
         <div className="px-5 py-8 sm:px-8 lg:px-10 lg:py-10">
 
-          {/* ==========================================
-              WELCOME CARD
-          ========================================== */}
+          {/* ================================
+              WELCOME
+          ================================= */}
 
           <motion.section
             initial={{
@@ -682,8 +644,6 @@ function AdminDashboard() {
             className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-[#111827] via-[#0f172a] to-[#07111f] p-7 shadow-2xl sm:p-10"
           >
 
-            {/* Glow */}
-
             <div className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-cyan-400/10 blur-3xl" />
 
             <div className="relative z-10 max-w-3xl">
@@ -693,8 +653,7 @@ function AdminDashboard() {
               </p>
 
               <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
-                {adminUser?.name ||
-                  "Rahul Maurya"}
+                {adminName}
               </h2>
 
               <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-400 sm:text-base">
@@ -730,11 +689,11 @@ function AdminDashboard() {
 
           </motion.section>
 
-          {/* ==========================================
+          {/* ================================
               STATISTICS
-          ========================================== */}
+          ================================= */}
 
-          <section className="mt-8">
+          <section className="mt-10">
 
             <div className="mb-5 flex items-end justify-between">
 
@@ -783,7 +742,7 @@ function AdminDashboard() {
                     className="group block h-full"
                   >
 
-                    <div className="h-full rounded-2xl border border-white/10 bg-[#0f172a] p-6 transition-all duration-300 hover:-translate-y-1 hover:border-cyan-400/20 hover:bg-[#111c31] hover:shadow-xl hover:shadow-cyan-400/5">
+                    <div className="h-full rounded-2xl border border-white/10 bg-[#0f172a] p-6 transition-all duration-300 hover:-translate-y-1 hover:border-cyan-400/20 hover:bg-[#111c31]">
 
                       <div className="flex items-start justify-between">
 
@@ -793,7 +752,7 @@ function AdminDashboard() {
                             {stat.title}
                           </p>
 
-                          <p className="mt-3 text-4xl font-bold tracking-tight text-white">
+                          <p className="mt-3 text-4xl font-bold text-white">
 
                             {loading ? (
                               <span className="inline-block h-10 w-12 animate-pulse rounded-lg bg-white/10" />
@@ -809,7 +768,7 @@ function AdminDashboard() {
 
                         </div>
 
-                        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-cyan-400/10 text-xl text-cyan-400 transition group-hover:scale-105 group-hover:bg-cyan-400/15">
+                        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-cyan-400/10 text-xl text-cyan-400 transition group-hover:scale-105">
                           {stat.icon}
                         </div>
 
@@ -838,9 +797,9 @@ function AdminDashboard() {
 
           </section>
 
-          {/* ==========================================
+          {/* ================================
               QUICK ACTIONS
-          ========================================== */}
+          ================================= */}
 
           <section className="mt-10">
 
@@ -883,7 +842,7 @@ function AdminDashboard() {
                       className="group flex h-full items-center gap-5 rounded-2xl border border-white/10 bg-[#0f172a] p-6 transition-all duration-300 hover:-translate-y-1 hover:border-cyan-400/20 hover:bg-[#111c31]"
                     >
 
-                      <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-cyan-400/10 text-xl text-cyan-400 transition group-hover:bg-cyan-400/15">
+                      <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-cyan-400/10 text-xl text-cyan-400">
                         {action.icon}
                       </div>
 
@@ -915,9 +874,9 @@ function AdminDashboard() {
 
           </section>
 
-          {/* ==========================================
+          {/* ================================
               MANAGEMENT GRID
-          ========================================== */}
+          ================================= */}
 
           <section className="mt-10">
 
@@ -961,9 +920,7 @@ function AdminDashboard() {
 
           </section>
 
-          {/* ==========================================
-              FOOTER
-          ========================================== */}
+          {/* Footer */}
 
           <footer className="mt-12 border-t border-white/10 pt-6 text-center">
 
