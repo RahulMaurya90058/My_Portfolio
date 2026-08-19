@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 
@@ -16,6 +16,8 @@ import {
   FaBars,
   FaTimes,
 } from "react-icons/fa";
+
+import API from "../../api/api";
 
 // ==========================================
 // Sidebar Menu
@@ -69,9 +71,15 @@ const menuItems = [
   },
 ];
 
+// ==========================================
+// Admin Dashboard
+// ==========================================
+
 function AdminDashboard() {
-  const [sidebarOpen, setSidebarOpen] =
-    useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // Projects count
+  const [projectCount, setProjectCount] = useState(0);
 
   const navigate = useNavigate();
 
@@ -88,6 +96,29 @@ function AdminDashboard() {
   // ==========================================
 
   const currentPath = window.location.pathname;
+
+  // ==========================================
+  // Fetch Project Count
+  // ==========================================
+
+  useEffect(() => {
+    const fetchProjectCount = async () => {
+      try {
+        const res = await API.get("/projects");
+
+        setProjectCount(
+          res.data.projects?.length || 0
+        );
+      } catch (error) {
+        console.error(
+          "Failed to fetch project count:",
+          error
+        );
+      }
+    };
+
+    fetchProjectCount();
+  }, []);
 
   // ==========================================
   // Navigation
@@ -397,8 +428,10 @@ function AdminDashboard() {
                     Projects
                   </p>
 
+                  {/* Dynamic Project Count */}
+
                   <p className="mt-2 text-3xl font-bold text-white">
-                    0
+                    {projectCount}
                   </p>
 
                 </div>
