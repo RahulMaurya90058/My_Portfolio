@@ -71,7 +71,7 @@ function AdminDashboard() {
     adminUser?.profileImage ||
     adminUser?.avatar ||
     adminUser?.photo ||
-    "/profile.jpg";
+    "/profile.png";
 
   // ==========================================
   // Extract Array From API Response
