@@ -13,10 +13,10 @@ const API_URL = import.meta.env.VITE_API_URL;
 
 function Hero() {
   const [profile, setProfile] = useState(null);
-
-  const [resumeUrl, setResumeUrl] = useState("#");
+  const [resume, setResume] = useState(null);
 
   const [loading, setLoading] = useState(true);
+  const [resumeLoading, setResumeLoading] = useState(true);
 
   const [imageError, setImageError] = useState(false);
 
@@ -33,10 +33,7 @@ function Hero() {
 
         const data = await response.json();
 
-        if (
-          data.success &&
-          data.profile
-        ) {
+        if (data.success && data.profile) {
           setProfile(data.profile);
         }
       } catch (error) {
@@ -59,6 +56,8 @@ function Hero() {
   useEffect(() => {
     const fetchResume = async () => {
       try {
+        setResumeLoading(true);
+
         const response = await fetch(
           `${API_URL}/api/resume`
         );
@@ -66,16 +65,23 @@ function Hero() {
         const data = await response.json();
 
         if (
+          response.ok &&
           data.success &&
-          data.resume?.fileUrl
+          data.resume
         ) {
-          setResumeUrl(data.resume.fileUrl);
+          setResume(data.resume);
+        } else {
+          setResume(null);
         }
       } catch (error) {
         console.error(
           "Failed to load resume:",
           error
         );
+
+        setResume(null);
+      } finally {
+        setResumeLoading(false);
       }
     };
 
@@ -87,8 +93,7 @@ function Hero() {
   // ==========================================
 
   const name =
-    profile?.name ||
-    "Rahul Maurya";
+    profile?.name || "Rahul Maurya";
 
   const title =
     profile?.title ||
@@ -104,10 +109,20 @@ function Hero() {
 
   const linkedin =
     profile?.linkedin ||
-    "https://linkedin.com";
+    "https://www.linkedin.com";
 
   const profileImage =
     profile?.profileImage || "";
+
+  // ==========================================
+  // RESUME DATA
+  // ==========================================
+
+  const resumeUrl =
+    resume?.fileUrl || "";
+
+  const resumeFileName =
+    resume?.fileName || "Resume.pdf";
 
   // ==========================================
   // SPLIT NAME
@@ -122,6 +137,62 @@ function Hero() {
   const lastName =
     nameParts.slice(1).join(" ") ||
     "Maurya";
+
+  // ==========================================
+  // DOWNLOAD RESUME
+  // ==========================================
+
+  const handleResumeDownload = async () => {
+    if (!resumeUrl) {
+      return;
+    }
+
+    try {
+      // Open the actual uploaded resume URL.
+      // This avoids downloading JSON/HTML response
+      // instead of the PDF file.
+
+      const response = await fetch(resumeUrl);
+
+      if (!response.ok) {
+        throw new Error(
+          "Resume file could not be downloaded"
+        );
+      }
+
+      const blob = await response.blob();
+
+      const blobUrl =
+        window.URL.createObjectURL(blob);
+
+      const link =
+        document.createElement("a");
+
+      link.href = blobUrl;
+      link.download = resumeFileName;
+
+      document.body.appendChild(link);
+
+      link.click();
+
+      link.remove();
+
+      window.URL.revokeObjectURL(blobUrl);
+    } catch (error) {
+      console.error(
+        "Resume download error:",
+        error
+      );
+
+      // Fallback:
+      // Open uploaded resume directly.
+      window.open(
+        resumeUrl,
+        "_blank",
+        "noopener,noreferrer"
+      );
+    }
+  };
 
   // ==========================================
   // UI
@@ -157,6 +228,8 @@ function Hero() {
             duration: 0.7,
           }}
         >
+          {/* Hello */}
+
           <p className="mb-4 text-sm font-semibold uppercase tracking-[0.3em] text-cyan-400">
             Hello, I'm
           </p>
@@ -185,7 +258,9 @@ function Hero() {
             {bio}
           </p>
 
-          {/* Buttons */}
+          {/* ==================================
+              BUTTONS
+          =================================== */}
 
           <div className="mt-8 flex flex-wrap gap-4">
 
@@ -193,32 +268,53 @@ function Hero() {
 
             <a
               href="#projects"
-              className="inline-flex items-center gap-2 rounded-full bg-cyan-400 px-6 py-3 font-semibold text-slate-950 transition hover:scale-105"
+              className="inline-flex items-center gap-2 rounded-full bg-cyan-400 px-6 py-3 font-semibold text-slate-950 transition hover:scale-105 hover:bg-cyan-300"
             >
               View Projects
 
               <ArrowDown size={18} />
             </a>
 
-            {/* Resume */}
+            {/* =================================
+                DOWNLOAD RESUME
+            ================================== */}
 
-            <a
-              href={resumeUrl}
-              download
-              className={`inline-flex items-center gap-2 rounded-full border border-white/15 px-6 py-3 font-semibold text-white transition hover:border-cyan-400 hover:text-cyan-400 ${
-                resumeUrl === "#"
-                  ? "pointer-events-none opacity-50"
-                  : ""
-              }`}
-            >
-              <Download size={18} />
+            {resumeLoading ? (
+              <button
+                type="button"
+                disabled
+                className="inline-flex cursor-not-allowed items-center gap-2 rounded-full border border-white/15 px-6 py-3 font-semibold text-slate-500 opacity-70"
+              >
+                <Download size={18} />
 
-              Download Resume
-            </a>
+                Loading Resume...
+              </button>
+            ) : resumeUrl ? (
+              <button
+                type="button"
+                onClick={handleResumeDownload}
+                className="inline-flex items-center gap-2 rounded-full border border-white/15 px-6 py-3 font-semibold text-white transition hover:border-cyan-400 hover:text-cyan-400"
+              >
+                <Download size={18} />
 
+                Download Resume
+              </button>
+            ) : (
+              <button
+                type="button"
+                disabled
+                className="inline-flex cursor-not-allowed items-center gap-2 rounded-full border border-white/10 px-6 py-3 font-semibold text-slate-600"
+              >
+                <Download size={18} />
+
+                Resume Unavailable
+              </button>
+            )}
           </div>
 
-          {/* Social Links */}
+          {/* ==================================
+              SOCIAL LINKS
+          =================================== */}
 
           <div className="mt-8 flex items-center gap-4">
 
@@ -227,7 +323,7 @@ function Hero() {
             <a
               href={github}
               target="_blank"
-              rel="noreferrer"
+              rel="noopener noreferrer"
               aria-label="GitHub"
               className="rounded-full border border-white/10 p-3 text-slate-300 transition hover:border-cyan-400 hover:text-cyan-400"
             >
@@ -239,14 +335,25 @@ function Hero() {
             <a
               href={linkedin}
               target="_blank"
-              rel="noreferrer"
+              rel="noopener noreferrer"
               aria-label="LinkedIn"
               className="rounded-full border border-white/10 p-3 text-slate-300 transition hover:border-cyan-400 hover:text-cyan-400"
             >
               <FaLinkedinIn size={20} />
             </a>
-
           </div>
+
+          {/* ==================================
+              RESUME STATUS
+          =================================== */}
+
+          {!resumeLoading &&
+            resume &&
+            resume.fileName && (
+              <p className="mt-4 text-xs text-slate-600">
+                {resume.fileName}
+              </p>
+            )}
         </motion.div>
 
         {/* ====================================
@@ -292,7 +399,7 @@ function Hero() {
 
                     setImageError(true);
                   }}
-                  className="h-full w-full object-contain p-2"
+                  className="h-full w-full object-cover"
                 />
               ) : (
                 <span className="text-7xl font-bold text-cyan-400">
@@ -303,7 +410,6 @@ function Hero() {
             </div>
           </div>
         </motion.div>
-
       </div>
     </section>
   );

@@ -2,57 +2,41 @@ import express from "express";
 
 import {
   getResume,
+  downloadResume,
   getAllResumes,
   createResume,
   updateResume,
   deleteResume,
 } from "../controllers/resumeController.js";
 
-import protect from "../middleware/authMiddleware.js";
-
-import uploadResume from "../middleware/resumeUpload.js";
+import { protect } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
 // ==========================================
-// PUBLIC
+// PUBLIC ROUTES
 // ==========================================
 
 // Get active resume
 router.get("/", getResume);
 
+// Download active resume
+router.get("/download", downloadResume);
+
 // ==========================================
-// ADMIN
+// ADMIN ROUTES
 // ==========================================
 
 // Get all resumes
-router.get(
-  "/admin/all",
-  protect,
-  getAllResumes
-);
+router.get("/all", protect, getAllResumes);
 
-// Upload resume
-router.post(
-  "/",
-  protect,
-  uploadResume.single("resume"),
-  createResume
-);
+// Upload / create resume
+router.post("/", protect, createResume);
 
 // Update resume
-router.put(
-  "/:id",
-  protect,
-  uploadResume.single("resume"),
-  updateResume
-);
+router.put("/:id", protect, updateResume);
 
 // Delete resume
-router.delete(
-  "/:id",
-  protect,
-  deleteResume
-);
+router.delete("/:id", protect, deleteResume);
 
 export default router;

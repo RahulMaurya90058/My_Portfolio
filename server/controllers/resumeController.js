@@ -104,6 +104,117 @@ export const getResume = async (req, res) => {
 };
 
 // ==========================================
+// DOWNLOAD ACTIVE RESUME
+// ==========================================
+
+export const downloadResume = async (
+  req,
+  res
+) => {
+  try {
+    // Find active resume
+    let resume = await Resume.findOne({
+      isActive: true,
+    }).sort({
+      createdAt: -1,
+    });
+
+    // Fallback to latest resume
+    if (!resume) {
+      resume = await Resume.findOne().sort({
+        createdAt: -1,
+      });
+    }
+
+    // Resume not found
+    if (!resume || !resume.fileUrl) {
+      return res.status(404).json({
+        success: false,
+        message: "Resume not found",
+      });
+    }
+
+    // Fetch PDF from Cloudinary
+    const response = await fetch(
+      resume.fileUrl
+    );
+
+    if (!response.ok) {
+      throw new Error(
+        `Failed to fetch resume from Cloudinary: ${response.status}`
+      );
+    }
+
+    // Convert response to buffer
+    const arrayBuffer =
+      await response.arrayBuffer();
+
+    const buffer =
+      Buffer.from(arrayBuffer);
+
+    // ========================================
+    // FILE NAME
+    // ========================================
+
+    let fileName =
+      resume.fileName ||
+      "Rahul-Maurya-Resume.pdf";
+
+    // Remove unsafe characters
+    fileName = fileName.replace(
+      /[<>:"/\\|?*]/g,
+      "-"
+    );
+
+    // Make sure extension is PDF
+    if (
+      !fileName
+        .toLowerCase()
+        .endsWith(".pdf")
+    ) {
+      fileName += ".pdf";
+    }
+
+    // ========================================
+    // RESPONSE HEADERS
+    // ========================================
+
+    res.setHeader(
+      "Content-Type",
+      resume.fileType ||
+        "application/pdf"
+    );
+
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="${fileName}"`
+    );
+
+    res.setHeader(
+      "Content-Length",
+      buffer.length
+    );
+
+    // ========================================
+    // SEND FILE
+    // ========================================
+
+    return res.send(buffer);
+  } catch (error) {
+    console.error(
+      "Download resume error:",
+      error
+    );
+
+    return res.status(500).json({
+      success: false,
+      message:
+        "Failed to download resume",
+    });
+  }
+};
+
+// ==========================================
 // GET ALL RESUMES - ADMIN
 // ==========================================
 
