@@ -13,6 +13,7 @@ function Resume() {
   const [resume, setResume] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [downloading, setDownloading] = useState(false);
 
   // ==========================================
   // FETCH ACTIVE RESUME
@@ -38,7 +39,10 @@ function Resume() {
 
         setResume(data.resume || null);
       } catch (error) {
-        console.error("Fetch resume error:", error);
+        console.error(
+          "Fetch resume error:",
+          error
+        );
 
         setError(
           "Unable to load resume right now."
@@ -50,6 +54,66 @@ function Resume() {
 
     fetchResume();
   }, []);
+
+  // ==========================================
+  // DOWNLOAD RESUME
+  // ==========================================
+
+  const handleDownload = async () => {
+    if (!resume?.fileUrl) {
+      return;
+    }
+
+    try {
+      setDownloading(true);
+
+      const response = await fetch(
+        resume.fileUrl
+      );
+
+      if (!response.ok) {
+        throw new Error(
+          "Failed to download resume"
+        );
+      }
+
+      const blob = await response.blob();
+
+      const blobUrl =
+        window.URL.createObjectURL(blob);
+
+      const link =
+        document.createElement("a");
+
+      link.href = blobUrl;
+
+      link.download =
+        resume.fileName ||
+        "Rahul-Maurya-Resume.pdf";
+
+      document.body.appendChild(link);
+
+      link.click();
+
+      document.body.removeChild(link);
+
+      window.URL.revokeObjectURL(blobUrl);
+    } catch (error) {
+      console.error(
+        "Resume download error:",
+        error
+      );
+
+      // Fallback
+      window.open(
+        resume.fileUrl,
+        "_blank",
+        "noopener,noreferrer"
+      );
+    } finally {
+      setDownloading(false);
+    }
+  };
 
   // ==========================================
   // GOOGLE PDF VIEWER URL
@@ -65,14 +129,18 @@ function Resume() {
     )}`;
   };
 
+  // ==========================================
+  // UI
+  // ==========================================
+
   return (
     <section
       id="resume"
       className="relative overflow-hidden bg-slate-900 px-6 py-24 sm:py-32"
     >
-      {/* =========================
-          Background Glow
-      ========================== */}
+      {/* ======================================
+          BACKGROUND GLOW
+      ======================================= */}
 
       <div className="absolute left-1/2 top-1/2 -z-0 h-72 w-72 -translate-x-1/2 -translate-y-1/2 rounded-full bg-cyan-400/10 blur-3xl" />
 
@@ -95,9 +163,10 @@ function Resume() {
           className="overflow-hidden rounded-3xl border border-white/10 bg-slate-950/70 p-8 shadow-2xl sm:p-12"
         >
           <div className="grid items-center gap-10 md:grid-cols-[auto_1fr_auto]">
-            {/* =========================
-                Resume Icon
-            ========================== */}
+
+            {/* =================================
+                RESUME ICON
+            ================================== */}
 
             <motion.div
               initial={{
@@ -119,11 +188,12 @@ function Resume() {
               <FaFilePdf size={38} />
             </motion.div>
 
-            {/* =========================
-                Content
-            ========================== */}
+            {/* =================================
+                CONTENT
+            ================================== */}
 
             <div className="text-center md:text-left">
+
               <p className="text-sm font-semibold uppercase tracking-[0.3em] text-cyan-400">
                 My Resume
               </p>
@@ -138,9 +208,7 @@ function Resume() {
                 projects, experience and achievements.
               </p>
 
-              {/* =========================
-                  Loading
-              ========================== */}
+              {/* Loading */}
 
               {loading && (
                 <p className="mt-4 text-sm text-slate-500">
@@ -148,9 +216,7 @@ function Resume() {
                 </p>
               )}
 
-              {/* =========================
-                  Error
-              ========================== */}
+              {/* Error */}
 
               {!loading && error && (
                 <p className="mt-4 text-sm text-red-400">
@@ -158,9 +224,7 @@ function Resume() {
                 </p>
               )}
 
-              {/* =========================
-                  No Resume
-              ========================== */}
+              {/* No Resume */}
 
               {!loading &&
                 !error &&
@@ -170,53 +234,64 @@ function Resume() {
                   </p>
                 )}
 
-              {/* =========================
-                  Resume Name
-              ========================== */}
+              {/* Resume Name */}
 
-              {!loading && !error && resume && (
-                <p className="mt-4 text-sm text-slate-500">
-                  {resume.fileName}
-                </p>
-              )}
+              {!loading &&
+                !error &&
+                resume && (
+                  <p className="mt-4 break-all text-sm text-slate-500">
+                    {resume.fileName}
+                  </p>
+                )}
+
             </div>
 
-            {/* =========================
-                Buttons
-            ========================== */}
+            {/* =================================
+                BUTTONS
+            ================================== */}
 
-            {!loading && !error && resume && (
-              <div className="flex flex-col gap-3 sm:flex-row md:flex-col">
-                {/* =========================
-                    Download Resume
-                ========================== */}
+            {!loading &&
+              !error &&
+              resume && (
+                <div className="flex flex-col gap-3 sm:flex-row md:flex-col">
 
-                <a
-                  href={resume.fileUrl}
-                  download={resume.fileName}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-cyan-400 px-6 py-3 font-semibold text-slate-950 transition hover:scale-105 hover:bg-cyan-300"
-                >
-                  <FaDownload size={17} />
-                  Download CV
-                </a>
+                  {/* =============================
+                      DOWNLOAD CV
+                  ============================== */}
 
-                {/* =========================
+                  <button
+                    type="button"
+                    onClick={handleDownload}
+                    disabled={downloading}
+                    className="inline-flex items-center justify-center gap-2 rounded-xl bg-cyan-400 px-6 py-3 font-semibold text-slate-950 transition hover:scale-105 hover:bg-cyan-300 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:scale-100"
+                  >
+                    <FaDownload size={17} />
+
+                    {downloading
+                      ? "Downloading..."
+                      : "Download CV"}
+                  </button>
+
+                  {/* =============================
+                      VIEW RESUME
+                  ============================== */}
+
+                  <a
+                    href={getPreviewUrl()}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/10 px-6 py-3 font-semibold text-slate-300 transition hover:border-cyan-400 hover:text-cyan-400"
+                  >
                     View Resume
-                ========================== */}
 
-                <a
-                  href={getPreviewUrl()}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/10 px-6 py-3 font-semibold text-slate-300 transition hover:border-cyan-400 hover:text-cyan-400"
-                >
-                  View Resume
-                  <FaExternalLinkAlt size={15} />
-                </a>
-              </div>
-            )}
+                    <FaExternalLinkAlt
+                      size={15}
+                    />
+                  </a>
+
+                </div>
+              )}
+
           </div>
         </motion.div>
       </div>

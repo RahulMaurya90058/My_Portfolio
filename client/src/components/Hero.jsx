@@ -148,10 +148,6 @@ function Hero() {
     }
 
     try {
-      // Open the actual uploaded resume URL.
-      // This avoids downloading JSON/HTML response
-      // instead of the PDF file.
-
       const response = await fetch(resumeUrl);
 
       if (!response.ok) {
@@ -169,6 +165,7 @@ function Hero() {
         document.createElement("a");
 
       link.href = blobUrl;
+
       link.download = resumeFileName;
 
       document.body.appendChild(link);
@@ -184,8 +181,7 @@ function Hero() {
         error
       );
 
-      // Fallback:
-      // Open uploaded resume directly.
+      // Fallback
       window.open(
         resumeUrl,
         "_blank",
@@ -228,6 +224,7 @@ function Hero() {
             duration: 0.7,
           }}
         >
+
           {/* Hello */}
 
           <p className="mb-4 text-sm font-semibold uppercase tracking-[0.3em] text-cyan-400">
@@ -310,6 +307,7 @@ function Hero() {
                 Resume Unavailable
               </button>
             )}
+
           </div>
 
           {/* ==================================
@@ -341,6 +339,7 @@ function Hero() {
             >
               <FaLinkedinIn size={20} />
             </a>
+
           </div>
 
           {/* ==================================
@@ -354,6 +353,7 @@ function Hero() {
                 {resume.fileName}
               </p>
             )}
+
         </motion.div>
 
         {/* ====================================
@@ -375,11 +375,12 @@ function Hero() {
           }}
           className="flex justify-center lg:justify-end"
         >
+
           <div className="relative">
 
             {/* Glow */}
 
-            <div className="absolute -inset-4 rounded-full bg-cyan-400/10 blur-2xl" />
+            <div className="absolute -inset-5 rounded-full bg-cyan-400/10 blur-2xl" />
 
             {/* Profile Circle */}
 
@@ -388,6 +389,7 @@ function Hero() {
               {!loading &&
               profileImage &&
               !imageError ? (
+
                 <img
                   src={profileImage}
                   alt={name}
@@ -399,17 +401,23 @@ function Hero() {
 
                     setImageError(true);
                   }}
-                  className="h-full w-full object-cover"
+                  className="h-full w-full object-contain p-4"
                 />
+
               ) : (
+
                 <span className="text-7xl font-bold text-cyan-400">
                   RM
                 </span>
+
               )}
 
             </div>
+
           </div>
+
         </motion.div>
+
       </div>
     </section>
   );
