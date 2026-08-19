@@ -12,14 +12,13 @@ import {
 const API_URL = import.meta.env.VITE_API_URL;
 
 function Hero() {
-  const [profile, setProfile] =
-    useState(null);
+  const [profile, setProfile] = useState(null);
 
-  const [loading, setLoading] =
-    useState(true);
+  const [resumeUrl, setResumeUrl] = useState("#");
 
-  const [imageError, setImageError] =
-    useState(false);
+  const [loading, setLoading] = useState(true);
+
+  const [imageError, setImageError] = useState(false);
 
   // ==========================================
   // FETCH PROFILE
@@ -32,8 +31,7 @@ function Hero() {
           `${API_URL}/api/profile`
         );
 
-        const data =
-          await response.json();
+        const data = await response.json();
 
         if (
           data.success &&
@@ -52,6 +50,36 @@ function Hero() {
     };
 
     fetchProfile();
+  }, []);
+
+  // ==========================================
+  // FETCH ACTIVE RESUME
+  // ==========================================
+
+  useEffect(() => {
+    const fetchResume = async () => {
+      try {
+        const response = await fetch(
+          `${API_URL}/api/resume`
+        );
+
+        const data = await response.json();
+
+        if (
+          data.success &&
+          data.resume?.fileUrl
+        ) {
+          setResumeUrl(data.resume.fileUrl);
+        }
+      } catch (error) {
+        console.error(
+          "Failed to load resume:",
+          error
+        );
+      }
+    };
+
+    fetchResume();
   }, []);
 
   // ==========================================
@@ -77,9 +105,6 @@ function Hero() {
   const linkedin =
     profile?.linkedin ||
     "https://linkedin.com";
-
-  const resumeUrl =
-    profile?.resumeUrl || "#";
 
   const profileImage =
     profile?.profileImage || "";
@@ -179,17 +204,12 @@ function Hero() {
 
             <a
               href={resumeUrl}
-              target={
-                resumeUrl !== "#"
-                  ? "_blank"
-                  : undefined
-              }
-              rel={
-                resumeUrl !== "#"
-                  ? "noreferrer"
-                  : undefined
-              }
-              className="inline-flex items-center gap-2 rounded-full border border-white/15 px-6 py-3 font-semibold text-white transition hover:border-cyan-400 hover:text-cyan-400"
+              download
+              className={`inline-flex items-center gap-2 rounded-full border border-white/15 px-6 py-3 font-semibold text-white transition hover:border-cyan-400 hover:text-cyan-400 ${
+                resumeUrl === "#"
+                  ? "pointer-events-none opacity-50"
+                  : ""
+              }`}
             >
               <Download size={18} />
 
