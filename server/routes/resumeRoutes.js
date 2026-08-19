@@ -9,7 +9,7 @@ import {
   deleteResume,
 } from "../controllers/resumeController.js";
 
-import { protect } from "../middleware/authMiddleware.js";
+import protect from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
@@ -30,7 +30,7 @@ router.get("/download", downloadResume);
 // Get all resumes
 router.get("/all", protect, getAllResumes);
 
-// Upload / create resume
+// Upload resume
 router.post("/", protect, createResume);
 
 // Update resume
