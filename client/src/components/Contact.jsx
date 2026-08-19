@@ -201,7 +201,7 @@ function Contact() {
               {/* Email */}
 
               <a
-                href="mailto:your.email@example.com"
+                href="mailto:rahulmaurya956945@gmail.com"
                 className="mt-8 flex items-center gap-4 rounded-xl border border-white/10 bg-slate-950/50 p-4 transition hover:border-cyan-400/30"
               >
                 <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-cyan-400/10 text-cyan-400">
@@ -214,7 +214,7 @@ function Contact() {
                   </p>
 
                   <p className="mt-1 text-sm font-medium text-slate-200">
-                    your.email@example.com
+                    rahulmaurya956945@gmail.com
                   </p>
                 </div>
               </a>
@@ -232,7 +232,7 @@ function Contact() {
                   </p>
 
                   <p className="mt-1 text-sm font-medium text-slate-200">
-                    Uttar Pradesh, India
+                    Varanasi, Uttar Pradesh, India
                   </p>
                 </div>
               </div>
@@ -247,7 +247,7 @@ function Contact() {
                 <div className="mt-4 flex gap-3">
 
                   <a
-                    href="https://github.com"
+                    href="https://github.com/RahulMaurya90058"
                     target="_blank"
                     rel="noreferrer"
                     aria-label="GitHub"
@@ -257,7 +257,7 @@ function Contact() {
                   </a>
 
                   <a
-                    href="https://linkedin.com"
+                    href="www.linkedin.com/in/rahul-maurya-16b957312"
                     target="_blank"
                     rel="noreferrer"
                     aria-label="LinkedIn"

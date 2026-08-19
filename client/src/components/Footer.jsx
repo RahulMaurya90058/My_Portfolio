@@ -86,7 +86,7 @@ function Footer() {
             <div className="mt-7 flex items-center gap-3">
 
               <a
-                href="https://github.com"
+                href="https://github.com/RahulMaurya90058"
                 target="_blank"
                 rel="noreferrer"
                 aria-label="GitHub"
@@ -96,7 +96,7 @@ function Footer() {
               </a>
 
               <a
-                href="https://linkedin.com"
+                href="www.linkedin.com/in/rahul-maurya-16b957312"
                 target="_blank"
                 rel="noreferrer"
                 aria-label="LinkedIn"
@@ -106,7 +106,7 @@ function Footer() {
               </a>
 
               <a
-                href="mailto:your.email@example.com"
+                href="mailto:your.rahulmaurya956945@gmail.com"
                 aria-label="Email"
                 className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/[0.02] text-slate-400 transition duration-300 hover:-translate-y-1 hover:border-cyan-400/50 hover:bg-cyan-400/10 hover:text-cyan-400"
               >
@@ -248,7 +248,7 @@ function Footer() {
                 <FaEnvelope size={14} />
               </span>
 
-              your.email@example.com
+              rahulmaurya956945@gmail.com
             </a>
           </motion.div>
         </div>

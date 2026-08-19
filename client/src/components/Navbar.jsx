@@ -63,7 +63,7 @@ function Navbar() {
           {/* GitHub */}
 
           <a
-            href="https://github.com"
+            href="https://github.com/RahulMaurya90058"
             target="_blank"
             rel="noreferrer"
             className="rounded-full p-2 text-slate-300 transition hover:bg-white/10 hover:text-cyan-400"
@@ -75,7 +75,7 @@ function Navbar() {
           {/* LinkedIn */}
 
           <a
-            href="https://linkedin.com"
+            href="www.linkedin.com/in/rahul-maurya-16b957312"
             target="_blank"
             rel="noreferrer"
             className="rounded-full p-2 text-slate-300 transition hover:bg-white/10 hover:text-cyan-400"
