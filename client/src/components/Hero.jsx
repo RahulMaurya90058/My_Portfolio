@@ -105,11 +105,11 @@ function Hero() {
 
   const github =
     profile?.github ||
-    "https://github.com";
+    "https://github.com/RahulMaurya90058";
 
   const linkedin =
     profile?.linkedin ||
-    "https://www.linkedin.com";
+    "https://www.linkedin.com/in/rahul-maurya-16b957312/";
 
   const profileImage =
     profile?.profileImage || "";
